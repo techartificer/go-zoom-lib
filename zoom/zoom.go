@@ -41,12 +41,12 @@ func jwtToken(key, secret string) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
-func (C Client) createRequest(path, method string, data io.Reader) (*[]byte, error) {
-	jwt, err := jwtToken(client.apiKey, client.secretKey)
+func (c *Client) createRequest(path, method string, data io.Reader) (*[]byte, error) {
+	jwt, err := jwtToken(c.apiKey, c.secretKey)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(method, client.endpoint+path, data)
+	req, err := http.NewRequest(method, c.endpoint+path, data)
 	if err != nil {
 		return nil, err
 	}
@@ -59,5 +59,9 @@ func (C Client) createRequest(path, method string, data io.Reader) (*[]byte, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	return &body, err
+	if err != nil {
+		return nil, err
+	}
+	err2 := checkError(body)
+	return &body, err2
 }

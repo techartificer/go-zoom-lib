@@ -3,6 +3,7 @@ package zoom
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -48,6 +49,11 @@ type Meeting struct {
 	Recurrence     Recurrence      `json:"recurrence"`
 }
 
+type MeetingDeleted struct {
+	Ok      bool
+	Message string
+}
+
 // Recurrence of the meeting
 type Recurrence struct {
 	Type           RecurrenceType `json:"type"`
@@ -70,8 +76,9 @@ type MeetingsData struct {
 	Meetings      []Meeting `json:"meetings,omitempty"`
 }
 
-func (c *Client) Meetings() (*MeetingsData, error) {
-	body, err := c.createRequest("/users/me/meetings", http.MethodGet, nil)
+func (c *Client) Meetings(userID string) (*MeetingsData, error) {
+	path := fmt.Sprintf("/users/%s/meetings", userID)
+	body, err := c.createRequest(path, http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -80,17 +87,29 @@ func (c *Client) Meetings() (*MeetingsData, error) {
 	return &meetingData, nil
 }
 
-func (c *Client) CreateMeeting(createOption CreateMeetingOptions) (*Meeting, error) {
+func (c *Client) CreateMeeting(userID string, createOption CreateMeetingOptions) (*Meeting, error) {
 	jd, err := json.Marshal(createOption)
 	if err != nil {
 		return nil, err
 	}
 	data := bytes.NewBuffer(jd)
-	body, err := c.createRequest("/users/me/meetings", http.MethodPost, data)
+	path := fmt.Sprintf("/users/%s/meetings", userID)
+	body, err := c.createRequest(path, http.MethodPost, data)
 	if err != nil {
 		return nil, err
 	}
 	meeting := &Meeting{}
 	json.Unmarshal(*body, meeting)
 	return meeting, nil
+}
+
+func (c *Client) DeleteMeeting(meetingID int) (*MeetingDeleted, error) {
+	path := fmt.Sprintf("/meetings/%d", meetingID)
+	body, err := c.createRequest(path, http.MethodDelete, nil)
+	if err != nil {
+		return nil, err
+	}
+	deleted := MeetingDeleted{}
+	json.Unmarshal(*body, &deleted)
+	return &deleted, nil
 }

@@ -1,8 +1,11 @@
 package zoom
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -58,7 +61,15 @@ func (c *Client) createRequest(path, method string, data io.Reader) (*[]byte, er
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == 204 {
+		meet := MeetingDeleted{Message: "Meeting deleted", Ok: true}
+		reqBodyBytes := new(bytes.Buffer)
+		json.NewEncoder(reqBodyBytes).Encode(meet)
+		ret := reqBodyBytes.Bytes()
+		return &ret, err
+	}
 	body, err := ioutil.ReadAll(resp.Body)
+	log.Println("Response body: ", string(body))
 	if err != nil {
 		return nil, err
 	}

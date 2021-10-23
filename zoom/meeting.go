@@ -76,13 +76,13 @@ type MeetingsData struct {
 	Meetings      []Meeting `json:"meetings,omitempty"`
 }
 
-func (c *Client) Meetings(userID string) (*MeetingsData, error) {
+func (c *Client) Meetings(userID string) (*[]MeetingsData, error) {
 	path := fmt.Sprintf("/users/%s/meetings", userID)
 	body, err := c.createRequest(path, http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
-	meetingData := MeetingsData{}
+	var meetingData []MeetingsData
 	json.Unmarshal(*body, &meetingData)
 	return &meetingData, nil
 }

@@ -2,6 +2,7 @@ package zoom
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -57,5 +58,17 @@ func TestCreateDeleteMeeting(t *testing.T) {
 		meet, err := c.CreateMeeting(uID, options)
 		assert.NotNil(t, err, "Error should not be nil")
 		assert.Nil(t, meet, "Meeting data should be nil")
+	})
+}
+
+func TestMeetingList(t *testing.T) {
+	t.Run("it should fetch all meetings", func(t *testing.T) {
+		c := NewClient(apiKey, apiSecret)
+		got, err := c.Meetings(uID)
+		assert.Nil(t, err, "Error should be nil")
+		rt := reflect.TypeOf(*got).Kind()
+		if rt.String() != reflect.Slice.String() {
+			t.Errorf("Expected slice got %s", rt)
+		}
 	})
 }
